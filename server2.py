@@ -20,17 +20,22 @@ def get_hash():
         return jsonify({"hash": hash_val})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route("/validate", methods=["POST"])
+        
+@app.route('/validate', methods=['POST'])
 def validate():
-    try:
-        data = request.get_json()
-        balance = str(data.get("balance", "0"))
-        provided_hash = data.get("hash")
-        actual_hash = hashlib.sha256((balance + SECRET).encode()).hexdigest()
-        return jsonify({"valid": provided_hash == actual_hash})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    data = request.json
+    balance = str(data.get("balance"))
+    client_hash = data.get("hash")
+    
+    expected = hashlib.sha256(f"{balance}{SECRET_KEY}".encode()).hexdigest()
+    print(f"Received balance: {balance}")
+    print(f"Expected hash: {expected}")
+    print(f"Client hash:   {client_hash}")
+
+    if client_hash == expected:
+        return jsonify({"valid": True})
+    else:
+        return jsonify({"valid": False})
 
 # Render requires this to bind to the correct port
 if __name__ == "__main__":

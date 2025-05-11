@@ -1,3 +1,15 @@
+from flask import Flask, request, jsonify
+import hashlib
+import os
+
+app = Flask(__name__)
+
+# Secret key for hashing (must match client)
+SECRET = "super_secret_key"
+
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ Casino server is running."
 @app.route("/get_hash", methods=["POST"])
 def get_hash():
     try:
@@ -27,3 +39,8 @@ def validate():
         return jsonify({"valid": client_hash == expected})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Render requires this to bind to the correct port
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Default to 5000 locally
+    app.run(host="0.0.0.0", port=port)

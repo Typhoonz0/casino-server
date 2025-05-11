@@ -27,7 +27,7 @@ def validate():
     balance = str(data.get("balance"))
     client_hash = data.get("hash")
     
-    expected = hashlib.sha256(f"{balance}{SECRET_KEY}".encode()).hexdigest()
+    expected = hashlib.sha256(f"{balance}{SECRET}".encode()).hexdigest()
     print(f"Received balance: {balance}")
     print(f"Expected hash: {expected}")
     print(f"Client hash:   {client_hash}")

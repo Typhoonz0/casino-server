@@ -35,7 +35,7 @@ def validate():
     if client_hash == expected:
         return jsonify({"valid": True})
     else:
-        return jsonify({"valid": False})
+        return jsonify({"valid": False, "client_hash": client_hash, "expected": expected, "balance": balance})
 
 # Render requires this to bind to the correct port
 if __name__ == "__main__":

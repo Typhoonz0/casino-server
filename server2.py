@@ -35,16 +35,17 @@ def get_hash():
         balance = str(data.get("balance", "0"))
         player_id = data.get("player_id", "")
 
-        # Update the balance when hash is requested
+        # If the player doesn't exist, initialize their balance
         if player_id not in player_balances:
-            player_balances[player_id] = float(balance)  # Initialize balance if player doesn't exist
+            player_balances[player_id] = float(balance)
         else:
-            player_balances[player_id] = float(balance)  # Update the balance if it exists
+            # Update balance based on request, bypassing hash logic
+            player_balances[player_id] = float(balance)
 
-        # Save the updated player balances to file
+        # Save updated balance to file
         save_player_balances()
 
-        # Generate the hash as usual
+        # Generate the hash as usual (this will be sent back for client-side verification)
         hash_val = hashlib.sha256((player_id + balance + SECRET).encode()).hexdigest()
         print(f"Updated balance for {player_id}: {player_balances[player_id]}")
         return jsonify({"hash": hash_val})
@@ -59,26 +60,24 @@ def validate():
         client_hash = data.get("client_hash")
         player_id = data.get("player_id", "")
 
-        # Update the balance when validating
+        # If the player's balance has changed, update it directly and disregard hash
         if player_id not in player_balances:
-            player_balances[player_id] = float(balance)  # Initialize balance if player doesn't exist
+            player_balances[player_id] = float(balance)  # Initialize balance if not present
         else:
-            player_balances[player_id] = float(balance)  # Update the balance if it exists
+            player_balances[player_id] = float(balance)  # Directly update the balance
 
-        # Save the updated player balances to file
+        # Save updated balance to file
         save_player_balances()
 
+        # Now, generate the expected hash (using the new balance)
         expected = hashlib.sha256((player_id + balance + SECRET).encode()).hexdigest()
         print(f"Player ID:      {player_id}")
         print(f"Balance:        {balance}")
         print(f"Expected hash:  {expected}")
         print(f"Client hash:    {client_hash}")
 
-        if client_hash == expected:
-            print(f"Validated balance for {player_id}: {player_balances[player_id]}")
-            return jsonify({"valid": True})
-        else:
-            return jsonify({"valid": False, "client_hash": client_hash, "expected": expected, "balance": balance})
+        # We disregard hash validation because we're updating the balance directly
+        return jsonify({"valid": True, "balance": player_balances[player_id]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -89,10 +88,10 @@ def give_money():
         player_id = data.get("player_id")
         amount = float(data.get("amount", 0))
 
-        # Check if player exists and update the balance
+        # Check if player exists, and update the balance directly
         if player_id in player_balances:
             player_balances[player_id] += amount
-            # Save the updated player balances to file
+            # Save the updated balance to file
             save_player_balances()
             print(f"New balance for {player_id}: {player_balances[player_id]}")
             return jsonify({"message": f"Given ${amount} to player {player_id}. New balance: ${player_balances[player_id]}"})

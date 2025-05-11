@@ -19,7 +19,15 @@ def get_hash():
         balance = str(data.get("balance", "0"))
         player_id = data.get("player_id", "")
 
+        # Update the balance when hash is requested
+        if player_id not in player_balances:
+            player_balances[player_id] = float(balance)  # Initialize balance if player doesn't exist
+        else:
+            player_balances[player_id] = float(balance)  # Update the balance if it exists
+
+        # Generate the hash as usual
         hash_val = hashlib.sha256((player_id + balance + SECRET).encode()).hexdigest()
+        print(f"Updated balance for {player_id}: {player_balances[player_id]}")
         return jsonify({"hash": hash_val})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -32,6 +40,12 @@ def validate():
         client_hash = data.get("client_hash")
         player_id = data.get("player_id", "")
 
+        # Update the balance when validating
+        if player_id not in player_balances:
+            player_balances[player_id] = float(balance)  # Initialize balance if player doesn't exist
+        else:
+            player_balances[player_id] = float(balance)  # Update the balance if it exists
+
         expected = hashlib.sha256((player_id + balance + SECRET).encode()).hexdigest()
         print(f"Player ID:      {player_id}")
         print(f"Balance:        {balance}")
@@ -39,6 +53,7 @@ def validate():
         print(f"Client hash:    {client_hash}")
 
         if client_hash == expected:
+            print(f"Validated balance for {player_id}: {player_balances[player_id]}")
             return jsonify({"valid": True})
         else:
             return jsonify({"valid": False, "client_hash": client_hash, "expected": expected, "balance": balance})
@@ -52,8 +67,10 @@ def give_money():
         player_id = data.get("player_id")
         amount = float(data.get("amount", 0))
 
+        # Check if player exists and update the balance
         if player_id in player_balances:
             player_balances[player_id] += amount
+            print(f"New balance for {player_id}: {player_balances[player_id]}")
             return jsonify({"message": f"Given ${amount} to player {player_id}. New balance: ${player_balances[player_id]}"})
         else:
             return jsonify({"error": "Player not found"}), 404

@@ -48,7 +48,7 @@ def get_hash():
         # Generate the hash as usual (this will be sent back for client-side verification)
         hash_val = hashlib.sha256((player_id + balance + SECRET).encode()).hexdigest()
         print(f"Updated balance for {player_id}: {player_balances[player_id]}")
-        return jsonify({"hash": hash_val})
+        return jsonify({"hash": hash_val, "balance": player_balances[player_id]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -94,7 +94,7 @@ def give_money():
             # Save the updated balance to file
             save_player_balances()
             print(f"New balance for {player_id}: {player_balances[player_id]}")
-            return jsonify({"message": f"Given ${amount} to player {player_id}. New balance: ${player_balances[player_id]}"})
+            return jsonify({"message": f"Given ${amount} to player {player_id}. New balance: ${player_balances[player_id]}", "balance": player_balances[player_id]})
         else:
             return jsonify({"error": "Player not found"}), 404
     except Exception as e:

@@ -1,25 +1,38 @@
 from flask import Flask, request, jsonify
 import hashlib
+import os
 
 app = Flask(__name__)
-SECRET = "a-secret-salt"
 
-def hash_balance(balance):
-    return hashlib.sha256(f"{balance}{SECRET}".encode()).hexdigest()
+# Secret key for hashing (must match client)
+SECRET = "super_secret_key"
+
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ Casino server is running."
 
 @app.route("/get_hash", methods=["POST"])
 def get_hash():
-    data = request.get_json()
-    balance = data.get("balance")
-    return jsonify({"hash": hash_balance(balance)})
+    try:
+        data = request.get_json()
+        balance = str(data.get("balance", "0"))
+        hash_val = hashlib.sha256((balance + SECRET).encode()).hexdigest()
+        return jsonify({"hash": hash_val})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/validate", methods=["POST"])
 def validate():
-    data = request.get_json()
-    balance = data.get("balance")
-    client_hash = data.get("hash")
-    valid = (hash_balance(balance) == client_hash)
-    return jsonify({"valid": valid})
+    try:
+        data = request.get_json()
+        balance = str(data.get("balance", "0"))
+        provided_hash = data.get("hash")
+        actual_hash = hashlib.sha256((balance + SECRET).encode()).hexdigest()
+        return jsonify({"valid": provided_hash == actual_hash})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+# Render requires this to bind to the correct port
 if __name__ == "__main__":
-    app.run()
+    port = int(os.environ.get("PORT", 5000))  # Default to 5000 locally
+    app.run(host="0.0.0.0", port=port)
